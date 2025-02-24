@@ -1,0 +1,6 @@
+# Ignore the .env file
+.env
+docker.env
+# Ignore coverage files
+coverage.html
+coverage.out 

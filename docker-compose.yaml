@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: my_postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: my_database
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - my_network
+  my_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: my_service_container
+    env_file: 
+      - docker.env  # Specify the path to your .env file
+    ports:
+      - "8080:8080"
+    networks:
+      - my_network
+    depends_on:
+      - postgres  # Ensure my_service starts after postgres
+  swag:
+    image: ghcr.io/swaggo/swag:latest
+    container_name: swag_container
+    volumes:
+      - .:/code:ro  # Mount the current directory to /code as read-only
+    networks:
+      - my_network
+
+volumes:
+  postgres_data:
+
+networks:
+  my_network:
+    driver: bridge

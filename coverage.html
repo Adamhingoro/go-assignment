@@ -1,0 +1,524 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>database: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">assigment/database/database.go (87.5%)</option>
+				
+				<option value="file1">assigment/handler/auth_handler.go (72.2%)</option>
+				
+				<option value="file2">assigment/handler/company_handler.go (0.0%)</option>
+				
+				<option value="file3">assigment/handler/json_error.go (100.0%)</option>
+				
+				<option value="file4">assigment/handler/user_handler.go (65.9%)</option>
+				
+				<option value="file5">assigment/helper/hashing.go (100.0%)</option>
+				
+				<option value="file6">assigment/middleware/content-type-json.go (100.0%)</option>
+				
+				<option value="file7">assigment/middleware/jwt-validator.go (0.0%)</option>
+				
+				<option value="file8">assigment/middleware/middleware-db.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package database
+
+import (
+        "fmt"
+        "log"
+
+        "gorm.io/driver/postgres"
+        "gorm.io/gorm"
+)
+
+type Config struct {
+        Host     string
+        User     string
+        Password string
+        DBName   string
+        Port     string
+}
+
+type Database struct {
+        DB *gorm.DB
+}
+
+func NewDatabase(config Config) (*Database, error) <span class="cov8" title="1">{
+        dsn := fmt.Sprintf(
+                "host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+                config.Host, config.User, config.Password, config.DBName, config.Port,
+        )
+
+        var db *gorm.DB
+        var err error
+
+        db, err = gorm.Open(postgres.Open(dsn), &amp;gorm.Config{})
+
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to connect to database: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">log.Println("Database connection established")
+        return &amp;Database{DB: db}, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package handler
+
+import (
+        "assigment/core"
+        "assigment/database"
+        "assigment/dto"
+        "assigment/helper"
+        "assigment/model"
+        "encoding/json"
+        "log"
+        "net/http"
+        "time"
+
+        "github.com/dgrijalva/jwt-go"
+)
+
+var jwtKey []byte
+
+type AuthHandler struct {
+        DB *database.Database
+}
+
+func NewAuthHandler(db *database.Database, core *core.CoreConfig) *AuthHandler <span class="cov8" title="1">{
+        if core.JWT_KEY == nil </span><span class="cov0" title="0">{
+                log.Panicln("JWT key not supplied")
+        }</span>
+        <span class="cov8" title="1">jwtKey = core.JWT_KEY
+        return &amp;AuthHandler{DB: db}</span>
+}
+
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        var creds dto.LoginRequest
+        if err := json.NewDecoder(r.Body).Decode(&amp;creds); err != nil </span><span class="cov0" title="0">{
+                JSONError(w, http.StatusBadRequest, "Invalid request payload")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var user model.User
+        if err := h.DB.DB.Where("email = ? AND password = ?", creds.Email, helper.HashString(creds.Password)).First(&amp;user).Error; err != nil </span><span class="cov8" title="1">{
+                JSONError(w, http.StatusBadRequest, "Invalid Email or Password")
+                return
+        }</span>
+
+        <span class="cov8" title="1">token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+                "email":    user.Email,
+                "is_admin": user.IsAdmin,
+                "exp":      time.Now().Add(time.Hour * 24).Unix(),
+        })
+
+        tokenString, err := token.SignedString(jwtKey)
+        if err != nil </span><span class="cov0" title="0">{
+                JSONError(w, http.StatusBadRequest, "Error while generating JWT token")
+                return
+        }</span>
+
+        <span class="cov8" title="1">json.NewEncoder(w).Encode(map[string]string{"token": tokenString})</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package handler
+
+import (
+        "assigment/database"
+        "assigment/model"
+        "encoding/json"
+        "net/http"
+)
+
+type CompanyHandler struct {
+        DB *database.Database
+}
+
+func NewCompanyHandler(db *database.Database) *CompanyHandler <span class="cov0" title="0">{
+        return &amp;CompanyHandler{DB: db}
+}</span>
+
+func (h *CompanyHandler) GetCompanies(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        var companies []model.Company
+        h.DB.DB.Find(&amp;companies)
+        json.NewEncoder(w).Encode(companies)
+}</span>
+
+func (h *CompanyHandler) CreateCompany(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        var company model.Company
+        json.NewDecoder(r.Body).Decode(&amp;company)
+
+        h.DB.DB.Create(&amp;company)
+        w.WriteHeader(http.StatusCreated)
+        json.NewEncoder(w).Encode(company)
+}</span>
+
+func (h *CompanyHandler) UpdateCompany(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        var company model.Company
+        json.NewDecoder(r.Body).Decode(&amp;company)
+
+        id := r.URL.Query().Get("id")
+        if id == "" </span><span class="cov0" title="0">{
+                JSONError(w, http.StatusBadRequest, "Company ID is required")
+                return
+        }</span>
+
+        <span class="cov0" title="0">result := h.DB.DB.Model(&amp;company).Where("id = ?", id).Updates(company)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                JSONError(w, http.StatusInternalServerError, "Failed to update company")
+                return
+        }</span>
+
+        <span class="cov0" title="0">w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(company)</span>
+}
+
+func (h *CompanyHandler) DeleteCompany(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        id := r.URL.Query().Get("id")
+        if id == "" </span><span class="cov0" title="0">{
+                JSONError(w, http.StatusBadRequest, "Company ID is required")
+                return
+        }</span>
+
+        <span class="cov0" title="0">result := h.DB.DB.Where("id = ?", id).Delete(&amp;model.Company{})
+        if result.Error != nil </span><span class="cov0" title="0">{
+                JSONError(w, http.StatusInternalServerError, "Failed to delete company")
+                return
+        }</span>
+
+        <span class="cov0" title="0">w.WriteHeader(http.StatusNoContent)</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package handler
+
+import (
+        "encoding/json"
+        "net/http"
+)
+
+func JSONError(w http.ResponseWriter, status int, message string) <span class="cov8" title="1">{
+        w.WriteHeader(status)
+        json.NewEncoder(w).Encode(map[string]string{"error": message})
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package handler
+
+import (
+        "assigment/database"
+        "assigment/model"
+        "encoding/json"
+        "net/http"
+
+        "gorm.io/gorm"
+)
+
+type UserHandler struct {
+        DB *database.Database
+}
+
+func NewUserHandler(db *database.Database) *UserHandler <span class="cov8" title="1">{
+        return &amp;UserHandler{DB: db}
+}</span>
+
+func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        var users []model.User
+        h.DB.DB.Find(&amp;users)
+        json.NewEncoder(w).Encode(users)
+}</span>
+
+func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        var user model.User
+        json.NewDecoder(r.Body).Decode(&amp;user)
+
+        userExists, _ := h.UserExistsByEmail(user.Email)
+        if userExists </span><span class="cov8" title="1">{
+                JSONError(w, http.StatusBadRequest, "User already exists with same email")
+
+                return
+        }</span>
+
+        <span class="cov0" title="0">h.DB.DB.Create(&amp;user)
+        w.WriteHeader(http.StatusCreated)
+        json.NewEncoder(w).Encode(user)</span>
+}
+
+func (h *UserHandler) UserExistsByEmail(email string) (bool, error) <span class="cov8" title="1">{
+        var user model.User
+        result := h.DB.DB.Where("email = ?", email).First(&amp;user)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                if result.Error == gorm.ErrRecordNotFound </span><span class="cov0" title="0">{
+                        return false, nil // User does not exist
+                }</span>
+                <span class="cov0" title="0">return false, result.Error</span> // Some other error occurred
+        }
+        <span class="cov8" title="1">return true, nil</span> // User exists
+}
+
+func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        var user model.User
+        json.NewDecoder(r.Body).Decode(&amp;user)
+
+        // Assuming the user ID is passed in the URL
+        id := r.URL.Query().Get("id")
+        if id == "" </span><span class="cov0" title="0">{
+                JSONError(w, http.StatusBadRequest, "User ID is required")
+                return
+        }</span>
+
+        <span class="cov8" title="1">result := h.DB.DB.Model(&amp;user).Where("id = ?", id).Updates(user)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                JSONError(w, http.StatusInternalServerError, "Failed to update user")
+                return
+        }</span>
+
+        <span class="cov8" title="1">w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(user)</span>
+}
+
+func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        // Assuming the user ID is passed in the URL
+        id := r.URL.Query().Get("id")
+        if id == "" </span><span class="cov0" title="0">{
+                JSONError(w, http.StatusBadRequest, "User ID is required")
+                return
+        }</span>
+
+        <span class="cov8" title="1">result := h.DB.DB.Where("id = ? AND is_admin = ?", id, false).Delete(&amp;model.User{})
+        if result.Error != nil </span><span class="cov0" title="0">{
+                JSONError(w, http.StatusInternalServerError, "Failed to delete user")
+                return
+        }</span>
+
+        <span class="cov8" title="1">w.WriteHeader(http.StatusNoContent)</span> // No content to return
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package helper
+
+import (
+        "crypto/sha256"
+        "encoding/hex"
+)
+
+func HashString(input string) string <span class="cov8" title="1">{
+        plainText := []byte(input)
+        sha256Hash := sha256.Sum256(plainText)
+        return hex.EncodeToString(sha256Hash[:])
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package middleware
+
+import "net/http"
+
+// JSONMiddleware sets the Content-Type header to application/json for all responses
+func JSONMiddleware(next http.Handler) http.Handler <span class="cov8" title="1">{
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov8" title="1">{
+                // Ensure Content-Type is set for ALL responses (errors or success)
+                w.Header().Set("Content-Type", "application/json")
+                next.ServeHTTP(w, r)
+        }</span>)
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package middleware
+
+import (
+        "assigment/core"
+        "assigment/handler"
+        "assigment/model"
+        "fmt"
+        "log"
+        "net/http"
+        "strings"
+        "time"
+
+        "github.com/dgrijalva/jwt-go"
+)
+
+func ValidateJWT(tokenString string, core *core.CoreConfig) (*jwt.Token, error) <span class="cov0" title="0">{
+        log.Println("Received the jwt token", tokenString)
+        // Remove the "Bearer " prefix from the token string
+        tokenString = strings.Split(tokenString, " ")[1]
+        return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) </span><span class="cov0" title="0">{
+                // Ensure the signing method is what you expect
+                if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+                }</span>
+                <span class="cov0" title="0">return core.JWT_KEY, nil</span>
+        })
+}
+
+func ValidateJWTMiddleware(next http.HandlerFunc, core *core.CoreConfig) http.HandlerFunc <span class="cov0" title="0">{
+        return func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+                tokenString := r.Header.Get("Authorization")
+
+                if tokenString == "" </span><span class="cov0" title="0">{
+                        handler.JSONError(w, http.StatusUnauthorized, "Missing token")
+                        return
+                }</span>
+
+                <span class="cov0" title="0">token, err := ValidateJWT(tokenString, core)
+                if err != nil || !token.Valid </span><span class="cov0" title="0">{
+                        handler.JSONError(w, http.StatusUnauthorized, "Invalid token")
+                        return
+                }</span>
+
+                <span class="cov0" title="0">claims, ok := token.Claims.(jwt.MapClaims)
+                if !ok </span><span class="cov0" title="0">{
+                        handler.JSONError(w, http.StatusUnauthorized, "Invalid token claims")
+                        return
+                }</span>
+
+                <span class="cov0" title="0">log.Println("the token claims are ", claims)
+
+                email, ok := claims["email"].(string)
+                if !ok </span><span class="cov0" title="0">{
+                        http.Error(w, "Invalid email in token", http.StatusUnauthorized)
+                        return
+                }</span>
+
+                <span class="cov0" title="0">go UpdateUserLastSeen(email)
+
+                // Restrict based on payload values
+                if isAdmin, ok := claims["is_admin"].(bool); !ok || !isAdmin </span><span class="cov0" title="0">{
+                        handler.JSONError(w, http.StatusForbidden, "Access denied")
+                        return
+                }</span>
+
+                <span class="cov0" title="0">next(w, r)</span>
+        }
+}
+
+func UpdateUserLastSeen(email string) <span class="cov0" title="0">{
+        log.Println("Trying to update last seen of user", email)
+        var user model.User
+        if err := DB.First(&amp;user, "email = ?", email).Error; err != nil </span><span class="cov0" title="0">{
+                log.Println("Unable to find user based on email for last seen update", email)
+                return
+        }</span>
+
+        // Update the last_seen field
+        <span class="cov0" title="0">if err := DB.Model(&amp;user).Update("last_seen", time.Now()).Error; err != nil </span><span class="cov0" title="0">{
+                log.Println("failed to update last seen of user", email)
+                return
+        }</span>
+
+        <span class="cov0" title="0">log.Println("Last seen updated of user ", email)</span>
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package middleware
+
+import (
+        "log"
+
+        "gorm.io/gorm"
+)
+
+var DB *gorm.DB
+
+// SetDB allows you to set the DB instance for the middleware.
+func SetDB(db *gorm.DB) <span class="cov0" title="0">{
+        log.Println("Setting DB for middleware")
+        DB = db
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

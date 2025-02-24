@@ -1,0 +1,4 @@
+echo "Running all golang tests and putting out the coverage"
+go test ./... -v -coverprofile=coverage.out
+go tool cover -html=coverage.out -o coverage.html
+echo "Open the coverage.html"
