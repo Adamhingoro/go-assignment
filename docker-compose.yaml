@@ -27,13 +27,6 @@ services:
       - my_network
     depends_on:
       - postgres  # Ensure my_service starts after postgres
-  swag:
-    image: ghcr.io/swaggo/swag:latest
-    container_name: swag_container
-    volumes:
-      - .:/code:ro  # Mount the current directory to /code as read-only
-    networks:
-      - my_network
 
 volumes:
   postgres_data:
