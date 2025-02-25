@@ -1,9 +1,9 @@
 package router
 
 import (
-	"assigment/core"
-	"assigment/handler"
-	"assigment/middleware"
+	"assignment/core"
+	"assignment/handler"
+	"assignment/middleware"
 	"log"
 
 	"github.com/gorilla/mux"

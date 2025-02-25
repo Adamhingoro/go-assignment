@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"assigment/cronjob"
-	"assigment/database"
-	"assigment/model"
+	"assignment/cronjob"
+	"assignment/database"
+	"assignment/model"
 
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"

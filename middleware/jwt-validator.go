@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"assigment/core"
-	"assigment/handler"
-	"assigment/model"
+	"assignment/core"
+	"assignment/handler"
+	"assignment/model"
 	"fmt"
 	"log"
 	"net/http"

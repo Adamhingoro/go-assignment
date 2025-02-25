@@ -8,8 +8,11 @@ import (
 	"assigment/middleware"
 	"assigment/model"
 	"assigment/router"
+	"context"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"go.uber.org/dig"
 
@@ -20,6 +23,19 @@ import (
 )
 
 func main() {
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-signalChan
+		log.Println("Received shutdown signal, shutting down...")
+		cancel() // Cancel the context
+	}()
+
 	env_err := godotenv.Load(".env")
 	if env_err != nil {
 		if _, ok := os.LookupEnv("DB_HOST"); !ok {
@@ -78,11 +94,19 @@ func main() {
 	}
 
 	// Set up the server and routes
-	err = container.Invoke(func(r *router.Router) {
-		log.Println("Starting the server")
+	err = container.Invoke(func(r *router.Router, database *database.Database) {
+		log.Println("Registring routes....")
 		r.RegisterRoutes()
-		log.Println("Server starting on :8080")
-		http.ListenAndServe(":8080", r.GetMux())
+
+		go func() {
+			log.Println("Server starting on :8080")
+			http.ListenAndServe(":8080", r.GetMux())
+		}()
+
+		<-ctx.Done()
+		log.Println("Closing the database")
+		database.CloseDB()
+		log.Println("Shutting down the server...")
 	})
 	if err != nil {
 		log.Fatalf("Failed to invoke function: %v", err)

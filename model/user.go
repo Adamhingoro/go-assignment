@@ -2,7 +2,7 @@
 package model
 
 import (
-	"assigment/helper"
+	"assignment/helper"
 	"log"
 	"time"
 

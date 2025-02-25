@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"assigment/core"
-	"assigment/database"
-	"assigment/dto"
-	"assigment/helper"
-	"assigment/model"
+	"assignment/core"
+	"assignment/database"
+	"assignment/dto"
+	"assignment/helper"
+	"assignment/model"
 	"bytes"
 	"encoding/json"
 	"log"

@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"assigment/database"
-	"assigment/model"
+	"assignment/database"
+	"assignment/model"
 	"bytes"
 	"encoding/json"
 	"log"

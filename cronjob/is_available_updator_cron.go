@@ -17,6 +17,7 @@ func CheckAndUpdateUsers(db *database.Database) {
 	// Update users where last_seen is older than 5 hours
 	result := db.DB.Model(&model.User{}).
 		Where("last_seen < ?", fiveHoursAgo).
+		Where("is_available = ?", true).
 		Update("is_available", false)
 
 	if result.Error != nil {
