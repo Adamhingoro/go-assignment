@@ -1,13 +1,13 @@
 package main
 
 import (
-	"assigment/core"
-	"assigment/cronjob"
-	"assigment/database"
-	"assigment/handler"
-	"assigment/middleware"
-	"assigment/model"
-	"assigment/router"
+	"assignment/core"
+	"assignment/cronjob"
+	"assignment/database"
+	"assignment/handler"
+	"assignment/middleware"
+	"assignment/model"
+	"assignment/router"
 	"context"
 	"log"
 	"os"

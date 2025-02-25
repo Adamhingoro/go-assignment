@@ -1,8 +1,8 @@
 package cronjob
 
 import (
-	"assigment/database"
-	"assigment/model"
+	"assignment/database"
+	"assignment/model"
 	"log"
 	"time"
 
