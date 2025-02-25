@@ -36,6 +36,16 @@ This project is a Golang application designed to manage service centers for mult
 
 To get started with the project, follow the setup instructions below.
 
+#### Pre-requisits 
+ - the application uses the Postgres database to store the data, make sure to spin-up the postgres container using the following command. 
+ `docker-compose up -d postgres` 
+
+#### Running the application locally 
+ - To run the application locally use the command `go run main.go`, make sure `.env` file exists with correct values. (already supplied with initial values)
+
+#### Running the application containerized 
+ - To run the application using compose use the following command `docker-compose up -d my_service`
+
 ### Docker Compose Components
 
 1. **Services**:
@@ -58,6 +68,8 @@ To get started with the project, follow the setup instructions below.
 
 ### Extras
  the file `testncover` is used to run all unit tests and build the coverage.html 
+
+
  Postman collection of API's can be found in `Golang Assignment.postman_collection.json`
 
 

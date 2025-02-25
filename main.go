@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"go.uber.org/dig"
 
@@ -93,6 +94,9 @@ func main() {
 		log.Fatalf("failed to start application: %v", err)
 	}
 
+	//Seeding the initial user
+	container.Invoke(initialUserSeed)
+
 	// Set up the server and routes
 	err = container.Invoke(func(r *router.Router, database *database.Database) {
 		log.Println("Registring routes....")
@@ -111,5 +115,35 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to invoke function: %v", err)
 	}
+
+}
+
+// / Initial seeding of admin user
+func initialUserSeed(db *database.Database, uh *handler.UserHandler) {
+	var user = model.User{
+		Name:        "admin",
+		IsAdmin:     true,
+		Email:       "admin@gmail.com",
+		Password:    "admin",
+		CompanyID:   0,
+		IsAvailable: true,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		LastSeen:    time.Now(),
+	}
+
+	adminExist, err := uh.UserExistsByEmail(user.Email)
+	if err != nil {
+		log.Fatalln("Error while checking admin exists")
+		return
+	}
+
+	if adminExist {
+		log.Println("Seed admin account already exists")
+		return
+	}
+
+	db.DB.Create(&user)
+	log.Println("Seeding account created with admin@gmail.com with password admin")
 
 }
